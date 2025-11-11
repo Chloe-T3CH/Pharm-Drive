@@ -5,3 +5,6 @@ pdfplumber
 python-pptx
 openai>=1.0.0
 python-multipart
+streamlit
+requests
+google-generativeai

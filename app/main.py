@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from .utils import diff_texts, extract_text, summarize_changes
@@ -9,11 +9,23 @@ app = FastAPI(title="Pharm-Drive API")
 class CompareResponse(BaseModel):
     diff: str
     summary: str
+    method: str
+    tokens_used: int | None
+    truncated: bool
+
+
+DEFAULT_MISSION_CONTEXT = (
+    "Summarize the document differences with the perspective of a medical science liaison "
+    "and tailor the explanation for marketing, medical affairs, legal, and sales teams."
+)
 
 
 @app.post("/compare", response_model=CompareResponse)
 async def compare(
-    file_old: UploadFile = File(...), file_new: UploadFile = File(...)
+    file_old: UploadFile = File(...),
+    file_new: UploadFile = File(...),
+    mission_context: str | None = Form(None),
+    api_key: str | None = Form(None),
 ) -> CompareResponse:
     """Compare two documents and return a diff and AI-generated summary."""
     data_old = await file_old.read()
@@ -25,5 +37,15 @@ async def compare(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     diff = diff_texts(text_old, text_new)
-    summary = summarize_changes(diff)
-    return CompareResponse(diff=diff, summary=summary)
+    summary, metadata = summarize_changes(
+        diff,
+        mission_context=mission_context or DEFAULT_MISSION_CONTEXT,
+        api_keys_override=api_key,
+    )
+    return CompareResponse(
+        diff=diff,
+        summary=summary,
+        method=metadata["method"],
+        tokens_used=metadata["tokens_used"],
+        truncated=metadata["truncated"],
+    )

@@ -16,3 +16,6 @@ def test_compare_endpoint_txt():
     assert "-hello world" in data["diff"]
     assert "+hello there" in data["diff"]
     assert "Summary" in data["summary"]
+    assert data["method"] == "fallback"
+    assert data["tokens_used"] is None
+    assert data["truncated"] is False

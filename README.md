@@ -64,12 +64,31 @@ This platform leverages AI to automatically track, summarize, and translate upda
 - File storage (AWS S3 or local)
 - Slack/email API for notifications
 
+## Environment Variables
+- `SUMMARIZER_API_KEYS` – comma-separated list of OpenAI-compatible keys; the summarizer will iterate over each key until it returns a successful response.
+- `OPENAI_API_KEY` – legacy single-key entry that still works but is appended after the list above to keep backward compatibility.
+- `GEMINI_API_KEY` – (optional) provides a Google Gemini key when you prefer Gemini or legacy generative AI over OpenAI.
+- `GEMINI_MODEL` – optional override for the Gemini model name (defaults to `gemini-2.0-flash-exp`); update it if your API key has access to a different model tier.
+
+Each entry in `SUMMARIZER_API_KEYS` can also include a provider prefix (like `gemini:` or `openai:`) so you can mix OpenAI and Gemini keys. When using the Streamlit settings form, prefix the session key with the provider too.
+
 ## Getting Started
 1. Clone the repository
 2. Set up Python environment and install dependencies
 3. Configure API keys (OpenAI, Slack) in environment variables
 4. Run backend and frontend servers
 5. Upload documents and test change tracking and summarization
+
+## Running the MVP UI
+1. Install dependencies:
+   - On macOS/Linux: `./install_deps.sh`
+   - On Windows: `install_deps.bat`
+2. Execute the startup helper:
+   - On macOS/Linux: `./run_demo.sh`
+   - On Windows: `run_demo.bat`
+3. Both scripts launch `uvicorn app.main:app --reload` and open the Streamlit UI (`ui.py`) with the backend already configured.
+4. In the **Settings** tab point the API endpoint to `http://127.0.0.1:8000`, optionally paste an OpenAI or Gemini API key (prefix with `openai:` or `gemini:` as needed), and save.
+5. Use the **Compare Documents** tab to upload baseline/updated assets, describe your medical science liaison mission, and review compliance-aware summaries + diffs.
 
 ## Contributing
 
