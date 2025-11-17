@@ -440,6 +440,7 @@ tab1, tab2, tab3, tab4 = st.tabs(
 # TAB 1: Compare
 with tab1:
     st.markdown("### Upload Documents")
+    demo_mode = st.checkbox("Use presentation demo (IMDELLTRA)", value=False)
     
     if st.session_state.demo_mode:
         st.warning("🎬 Demo Mode Active")
@@ -453,6 +454,7 @@ with tab1:
             type=["txt", "docx", "pdf", "pptx"],
             key="file1",
             help="The original document",
+            disabled=demo_mode,
         )
         if file1:
             st.success(f"✓ {file1.name}")
@@ -465,6 +467,7 @@ with tab1:
             type=["txt", "docx", "pdf", "pptx"],
             key="file2",
             help="The updated document",
+            disabled=demo_mode,
         )
         if file2:
             st.success(f"✓ {file2.name}")
@@ -508,19 +511,22 @@ with tab1:
     compare_button = st.button("🔍 Analyze Changes", type="primary", use_container_width=True)
     
     if compare_button:
-        if not file1 or not file2:
+        if not demo_mode and (not file1 or not file2):
             st.warning("⚠️ Please upload both documents")
         else:
             url = f"{st.session_state.api_endpoint.rstrip('/')}/compare"
+            display_old = file1.name if file1 else "IMDELLTRA.pdf (demo)"
+            display_new = file2.name if file2 else "IMDELLTRA (1).pdf (demo)"
             payload = {
                 "mission_context": mission_instruction
                 + " "
                 + (f"Departments: {', '.join(department_targets)}." if department_targets else ""),
                 "api_key": st.session_state.summarizer_api_key,
+                "demo": str(demo_mode).lower(),
             }
             files = {
-                "file_old": (file1.name, file1.getvalue(), file1.type),
-                "file_new": (file2.name, file2.getvalue(), file2.type),
+                "file_old": (file1.name, file1.getvalue(), file1.type) if file1 else ("", b"", ""),
+                "file_new": (file2.name, file2.getvalue(), file2.type) if file2 else ("", b"", ""),
             }
             
             progress = st.progress(0)
@@ -546,8 +552,8 @@ with tab1:
                     st.session_state.comparison_result = result
                     st.session_state.comparison_history.append({
                         "timestamp": datetime.now(),
-                        "file1": file1.name,
-                        "file2": file2.name,
+                        "file1": display_old,
+                        "file2": display_new,
                         "focus": focus_area,
                         "priority": priority_level,
                         "result": result,
